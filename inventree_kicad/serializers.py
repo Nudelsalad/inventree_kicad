@@ -160,13 +160,21 @@ class KicadDetailedPartSerializer(serializers.ModelSerializer):
         """
 
         footprint = ""
+        footprint_mapping = None
+        template_id = None
 
         if kicad_category := self.get_kicad_category(part):
             footprint = kicad_category.default_footprint
+            footprint_mapping = kicad_category.footprint_parameter_mapping
+            template_id = kicad_category.footprint_parameter_template
 
-        template_id = self.plugin.get_setting('KICAD_FOOTPRINT_PARAMETER', None)
+        if not template_id:
+            template_id = self.plugin.get_setting('KICAD_FOOTPRINT_PARAMETER', None)
 
         footprint = self.get_parameter_value(part, template_id, backup_value=footprint)
+
+        if footprint_mapping:
+            footprint = footprint_mapping.get(footprint, footprint)
 
         return str(footprint)
 
